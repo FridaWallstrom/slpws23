@@ -1,12 +1,6 @@
 a href="/posts/new" New Post
 
-h1 Public posts: 
-
 - posts.each do |post|
     li 
         p = post["content"]
         a href="/posts/#{post['id']}/edit" Edit Post
-        form method="POST" action="/posts/#{post['id']}/delete"
-            input type="submit" value="Delete Post"
-
-
