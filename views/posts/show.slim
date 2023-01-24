@@ -1,0 +1,9 @@
+a href="/posts" Back
+h1 #{result['header']} 
+h2 #{result['content']} 
+
+//denna posts id 
+a href="/posts/#{result['id']}/edit" Edit Post
+form method="POST" action="/posts/#{result['id']}/delete"
+    input type="submit" value="Delete Post"
+

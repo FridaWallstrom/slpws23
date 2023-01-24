@@ -1,6 +1,7 @@
+/ännu ej använd
+
 a href="/posts/new" New Post
 
-- posts.each do |post|
+- posts.reverse().each do |post|
     li 
-        p = post["content"]
-        a href="/posts/#{post['id']}/edit" Edit Post
+        p = post["header"]

@@ -17,11 +17,12 @@ end
 
 #get('/') do
 #    slim(:frontpage)
-#end 
+#end
 
 get('/posts') do 
     @db.results_as_hash = true 
     result = @db.execute("SELECT * FROM posts")
+    p "this is posts#{result}"
     slim(:"posts/index", locals: {posts: result})
 end 
 
@@ -31,7 +32,8 @@ end
 
 post('/posts/new') do 
     content = params[:content]
-    @db.execute("INSERT INTO posts (content) VALUES (?)", content)
+    header = params[:header]
+    @db.execute("INSERT INTO posts (header, content) VALUES (?,?)", header, content)
     redirect('/posts')
 end 
 
@@ -43,8 +45,9 @@ end
 
 post('/posts/:id/update') do 
     id = params[:id]
+    header = params[:header]
     content = params[:content]
-    @db.execute("UPDATE posts SET content=? WHERE id= ?", content, id)
+    @db.execute("UPDATE posts SET header=?, content=? WHERE id= ?", header, content, id)
     redirect('/posts')
 end 
 
@@ -55,3 +58,9 @@ get('/posts/:id/edit') do
     slim(:"posts/edit", locals: {result: result})
 end 
 
+get('/posts/:id/show') do 
+    @db.results_as_hash = true 
+    id = params[:id]
+    result = @db.execute("SELECT * FROM posts WHERE id = ?", id).first
+    slim(:"posts/show", locals: {result: result})
+end 
