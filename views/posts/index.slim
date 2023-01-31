@@ -1,7 +1,7 @@
-a href="/posts/new" New Post
+a href="/user_post" My posts 
 
 h1 Public posts: 
-- posts.reverse().each do |post|
+- posts.each do |post|
     li 
         a href="/posts/#{post['id']}/show" #{post["header"]}
 //om man går in på en post och det är ens egen can man edita - bättre 

@@ -1,9 +1,11 @@
-a href="/posts" Back
+a href="/" Back
 h1 #{result['header']} 
 h2 #{result['content']} 
 
-//denna posts id 
 a href="/posts/#{result['id']}/edit" Edit Post
 form method="POST" action="/posts/#{result['id']}/delete"
     input type="submit" value="Delete Post"
+form method="POST" action="/posts/#{result['id']}/save"
+    input type="submit" value="Save Post"
+//lägg till så man kan kommentera 
 
