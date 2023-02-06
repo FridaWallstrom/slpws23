@@ -1,11 +1,29 @@
-a href="/" Back
+form 
+    input type="button" value="Back" onclick="history.back()"
+
+//fixa formattering 
+- if user_id != post_user_id
+    p This was posted by: 
+    a href="/profile" #{username}
+    // där :id = post_user_id
+
 h1 #{result['header']} 
 h2 #{result['content']} 
 
-a href="/posts/#{result['id']}/edit" Edit Post
-form method="POST" action="/posts/#{result['id']}/delete"
-    input type="submit" value="Delete Post"
-form method="POST" action="/posts/#{result['id']}/save"
-    input type="submit" value="Save Post"
-//lägg till så man kan kommentera 
+- if user_type == 0 || user_id == post_user_id
+    a href="/posts/#{result['id']}/edit" Edit Post
+    form method="POST" action="/posts/#{result['id']}/delete"
+        input type="submit" value="Delete Post"
+    form method="POST" action="/posts/#{result['id']}/save"
+        input type="submit" value="Save Post"
 
+/- if logged_in
+    form action="/comments/new" method="post"
+        input type="text" name="content" placeholder="content of comment"
+        input type="hidden" name="user_" value="#{user_id}"
+        input type="hidden" name="post_id" value="#{result['id']}"
+        input type="submit" value="Upload Comment"
+
+/- comments.each do |comment|
+    - p = comment 
+    a href till users profil, user['username']

@@ -1,8 +1,12 @@
-a href="/user_post" My posts 
+
+- if logged_in
+    a href="/my_profile" My Profile 
+    form method="POST" action="/logout"
+        input type="submit" value="logout"
+- else 
+    a href="/login" Login
 
 h1 Public posts: 
 - posts.each do |post|
     li 
         a href="/posts/#{post['id']}/show" #{post["header"]}
-//om man går in på en post och det är ens egen can man edita - bättre 
-//post -> content -> header, body 
