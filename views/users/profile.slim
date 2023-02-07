@@ -1,14 +1,17 @@
 form 
     input type="button" value="Back" onclick="history.back()"
 
-- if you 
+- if id == user_id
     h1 Welcome back to your profile, #{username}
-    a href="/user_post" My posts 
+    a href="/posts/#{id}/user_post" My posts 
+    a href="/posts/#{id}/user_comments" My comments
 -else 
     h1 This is  #{username}'s Profile
-    a href="/other_user_post" Posts 
+    a href="/posts/#{id}/user_post" Posts 
+    a href="/posts/#{id}/user_comments" Comments
 
-// göra så kan ändra användarnamn 
+// se kommentarer 
 // kan se vänner 
+// lista med länkar till vänner 
 
 // lägga till vän 

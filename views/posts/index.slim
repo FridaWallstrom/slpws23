@@ -1,6 +1,6 @@
 
 - if logged_in
-    a href="/my_profile" My Profile 
+    a href="/user/#{user_id}/profile" My Profile
     form method="POST" action="/logout"
         input type="submit" value="logout"
 - else 

@@ -1,0 +1,7 @@
+form 
+    input type="button" value="Back" onclick="history.back()"
+
+- comments.each do |comment|
+    li 
+        a href="/posts/#{comment['post_id']}/show" #{comment["content"]}
+        // if you - delete 
