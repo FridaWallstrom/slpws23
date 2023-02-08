@@ -1,13 +1,16 @@
 form 
     input type="button" value="Back" onclick="history.back()"
 
+hr 
 - if id == user_id
-    h1 Welcome back to your profile, #{username}
+    h2 Welcome back to your profile, #{username}
     a href="/posts/#{id}/user_post" My posts 
+    br 
     a href="/posts/#{id}/user_comments" My comments
 -else 
-    h1 This is  #{username}'s Profile
-    a href="/posts/#{id}/user_post" Posts 
+    h2 This is  #{username}'s Profile
+    a href="/posts/#{id}/user_post" Posts
+    br  
     a href="/posts/#{id}/user_comments" Comments
 
 // se kommentarer 

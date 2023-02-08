@@ -1,36 +1,39 @@
 form 
     input type="button" value="Back" onclick="history.back()"
 
-//fixa formattering 
+hr 
+
 - if user_id != post_user_id
     p This was posted by: 
     a href="/user/#{post_user_id}/profile" #{username}
+    hr 
 
 h1 #{result['header']} 
 h2 #{result['content']} 
-
-- if user_type == 0 || user_id == post_user_id
-    a href="/posts/#{result['id']}/edit" Edit Post
-    form method="POST" action="/posts/#{result['id']}/delete"
-        input type="submit" value="Delete Post"
-    form method="POST" action="/posts/#{result['id']}/save"
-        input type="submit" value="Save Post"
+hr 
 
 - if logged_in
+    - if user_type == 0 || user_id == post_user_id
+        a href="/posts/#{result['id']}/edit" Edit Post
+        form method="POST" action="/posts/#{result['id']}/delete"
+            input type="submit" value="Delete Post"
+        //form method="POST" action="/posts/#{result['id']}/save"
+            input type="submit" value="Save Post"
+        hr 
+    h3 Comment Section:
     form action="/posts/#{result['id']}/comments/new" method="post"
         input type="text" name="content" placeholder="content of comment"
         input type="hidden" name="username" value="#{my_username}"
         input type="submit" value="Upload Comment"
+- else 
+    h3 Comment Section:
+
+br 
 
 - comments.each do |comment|
     h4 #{comment['content']}
     h5 This was commented by: 
     - p comment['user_id'] 
     a href="/user/#{comment['user_id']}/profile" #{comment['username']}
-    //fixa så tar namn ist id  
+    hr
     
-    //gör så att post_user_id == comment_user_id 
-//a href till users profil, user['username']
-// 1 -> hello
-// 5 -> b
-

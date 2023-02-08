@@ -8,7 +8,7 @@ enable :sessions
 
 configure do
     # set :show_exceptions, false
-    set :static_cache_control, [:no_store, :max_age => 0] #css, statiska dokument
+    set :static_cache_control, [:no_store, :max_age => 0] #uppdatera css, statiska dokument
 end
 
 before do 
@@ -23,7 +23,7 @@ get('/login') do
     slim(:"users/login")
 end 
 
-#finns någon bugg i login/register, fixa! 
+#finns någon bugg i login/register, fixa! result => nil
 post('/login') do 
     username = params[:username]
     password = params[:password]
@@ -85,7 +85,6 @@ end
 get('/') do 
     @db.results_as_hash = true 
     result = @db.execute("SELECT * FROM posts ORDER BY id DESC")
-    p "this is logged in: #{@logged_in}"
     slim(:"posts/index", locals: {posts: result, logged_in: @logged_in, user_id: @user_id})
 end 
 
@@ -104,8 +103,7 @@ get('/posts/:id/user_comments') do
     @db.results_as_hash = true 
     id = Integer(params[:id])
     result = @db.execute("SELECT * FROM comments WHERE user_id = ? ORDER BY id DESC", id)
-    p "this is result: #{result}"
-    slim(:"posts/user_comments", locals: {comments: result})
+    slim(:"posts/user_comments", locals: {comments: result, id: id, user_id: @user_id})
 end 
 
 get('/posts/new') do 
@@ -127,19 +125,21 @@ end
 
 ###
 
-#get('/saved_post') do 
+#get('/posts/:id/save') do 
 #    @db.results_as_hash = true 
+#    id = Integer(params(:id))
+    #id = postens id 
+    #insert into saved posts user id och post id 
 #    result = @db.execute("SELECT posts.id, users.id FROM posts INNER JOIN users ON posts.id = users.id")
-#    #blir detta ett nytt table som jag kan ta ifrån? 
-#    slim(:"posts/saved_post", locals: {posts: result})
+#    slim(:"posts/save", locals: {posts: result})
 #end 
 #
 #post('/posts/:id/save') do
 #    id = params[:id]
+# insert into post.id 
 #    result = @db.execute("SELECT posts.id, users.id FROM posts INNER JOIN users ON posts.id = users.id WHERE id = ?", @user_id)
 #    @db.execute("")
 #end 
-#
 
 #post('/posts/category') do 
 ##varje post ska ha en kategori, ska kunna sortera efter kategori 
@@ -187,6 +187,14 @@ post('/posts/:post_id/comments/new') do
     redirect("/posts/#{post_id}/show")
 end 
 
+post('/posts/:id/comment/delete') do 
+    id = params[:id] 
+    @db.execute("DELETE FROM comments WHERE id = ?", id)
+    redirect("/posts/#{@user_id}/user_comments")
+end 
+
 #lägg till så man kan se vem som postat 
 #kategori, vän, spara posts, 
 #ändra, ta bort kommentar 
+#skicka meddelanden till vänner 
+#chatt 
