@@ -11,6 +11,11 @@ hr
 h1 #{result['header']} 
 h2 #{result['content']} 
 hr 
+- if categories.length != 0 
+    h2 These are the post's categories: 
+    - categories.each do |category|
+        h3 #{category['name']}
+    hr 
 
 - if logged_in
     - if user_type == 0 || user_id == post_user_id

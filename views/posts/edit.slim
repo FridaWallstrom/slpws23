@@ -2,7 +2,19 @@ form
     input type="button" value="Back" onclick="history.back()"
 
 form action="/posts/#{result['id']}/update" method="post"
-    input type="text" name="header" value="#{result['header']}"'
-    input type="text" name="content" value="#{result['content']}"'
+    input type="text" name="header" value="#{result['header']}"
+    input type="text" name="content" value="#{result['content']}"
     input type="hidden" name="id" value="#{result['id']}"
+    hr
+    input type="checkbox" name="categories[]" value="funny" 
+    label Funny
+    input type="checkbox" name="categories[]" value="interesting" 
+    label Interesting
+    input type="checkbox" name="categories[]" value="serious" 
+    label Serious
+    input type="checkbox" name="categories[]" value="random" 
+    label Random
+    input type="checkbox" name="categories[]" value="misc" 
+    label Misc
+    hr 
     input type="submit" value="Save changes"

@@ -71,7 +71,7 @@ post('/register') do
     user_type = params[:user_type]
     @db.results_as_hash = true 
     result = @db.execute("SELECT * FROM users WHERE username = ?",username).first
-    if result 
+    if result
         slim(:"error")
     elsif password == password_confirm
         password_digest = BCrypt::Password.create(password)
@@ -113,7 +113,13 @@ end
 post('/posts/new') do 
     content = params[:content]
     header = params[:header]
+    categories = params[:categories]
     @db.execute("INSERT INTO posts (header, content, user_id) VALUES (?,?,?)", header, content, @user_id)
+    post_id = @db.execute("SELECT last_insert_rowid()")
+    categories.each do |category|
+        category_id = @db.execute("SELECT id from categories where name = ?", category)
+        @db.execute("INSERT INTO posts_categories (post_id, category_id) VALUES (?,?)", post_id, category_id)
+    end 
     redirect('/')
 end 
 
@@ -124,7 +130,6 @@ post('/posts/:id/delete') do
 end 
 
 ###
-
 #get('/posts/:id/save') do 
 #    @db.results_as_hash = true 
 #    id = Integer(params(:id))
@@ -141,25 +146,27 @@ end
 #    @db.execute("")
 #end 
 
-#post('/posts/category') do 
-##varje post ska ha en kategori, ska kunna sortera efter kategori 
-#end 
-
 ###
-
-post('/posts/:id/update') do 
-    id = params[:id]
-    header = params[:header]
-    content = params[:content]
-    @db.execute("UPDATE posts SET header=?, content=? WHERE id= ?", header, content, id)
-    redirect('/')
-end 
 
 get('/posts/:id/edit') do 
     @db.results_as_hash = true 
     id = params[:id]
     result = @db.execute("SELECT * FROM posts WHERE id = ?", id).first
     slim(:"posts/edit", locals: {result: result})
+end 
+
+post('/posts/:id/update') do 
+    id = params[:id]
+    header = params[:header]
+    content = params[:content]
+    categories = params[:categories]
+    @db.execute("UPDATE posts SET header=?, content=? WHERE id= ?", header, content, id)
+    @db.execute("DELETE FROM posts_categories WHERE post_id = ?", id)
+    categories.each do |category|
+        category_id = @db.execute("SELECT id from categories where name = ?", category)
+        @db.execute("INSERT INTO posts_categories (post_id, category_id) VALUES (?,?)", id, category_id)
+    end 
+    redirect('/')
 end 
 
 get('/posts/:id/show') do 
@@ -175,9 +182,16 @@ get('/posts/:id/show') do
     post_user_id = Integer(result["user_id"])
     name = @db.execute("SELECT * FROM users WHERE id = ?", post_user_id).first
     username = name["username"]
-    post_id = @db.execute("SELECT * FROM posts WHERE user_id = ?", post_user_id).first
     comments = @db.execute("SELECT * FROM comments WHERE post_id = ? ORDER BY id DESC", id) 
-    slim(:"posts/show", locals: {result: result, user_id: @user_id, post_user_id: post_user_id, user_type: user_type, logged_in: @logged_in, username: username, comments: comments, my_username: @username})
+    categories_id = @db.execute("SELECT category_id FROM posts_categories WHERE post_id = ?", id)
+    categories_id.map! do |hash|
+        hash["category_id"]
+    end 
+    categories = []
+    categories_id.each do |category_id|
+        categories << @db.execute("SELECT name FROM categories where id = ?", category_id).first
+    end 
+    slim(:"posts/show", locals: {result: result, user_id: @user_id, post_user_id: post_user_id, user_type: user_type, logged_in: @logged_in, username: username, comments: comments, my_username: @username, categories: categories})
 end 
 
 post('/posts/:post_id/comments/new') do 
@@ -193,8 +207,5 @@ post('/posts/:id/comment/delete') do
     redirect("/posts/#{@user_id}/user_comments")
 end 
 
-#lägg till så man kan se vem som postat 
-#kategori, vän, spara posts, 
-#ändra, ta bort kommentar 
-#skicka meddelanden till vänner 
-#chatt 
+#vän, spara posts, 
+###skicka meddelanden till vänner 
