@@ -3,6 +3,8 @@ require 'slim'
 require 'sqlite3'
 require 'bcrypt'
 require 'sinatra/reloader'
+require_relative './model.rb'
+# require 'byebug'
 
 enable :sessions
 
@@ -12,6 +14,8 @@ configure do
 end
 
 before do 
+    #db = SQLite3::Database.new('db/project.db')
+    #@db = db.results_as_hash = true 
     @db = SQLite3::Database.new('db/project.db')
     cache_control :no_store, :max_age => 0 #för routes
     @user_id = session[:id]
@@ -110,7 +114,7 @@ get('/posts/new') do
     slim(:"posts/new", locals: {id: @user_id})
 end 
 
-post('/posts/new') do 
+post('/posts') do 
     content = params[:content]
     header = params[:header]
     categories = params[:categories]
@@ -130,6 +134,7 @@ post('/posts/:id/delete') do
 end 
 
 ###
+
 #get('/posts/:id/save') do 
 #    @db.results_as_hash = true 
 #    id = Integer(params(:id))
@@ -169,7 +174,7 @@ post('/posts/:id/update') do
     redirect('/')
 end 
 
-get('/posts/:id/show') do 
+get('/posts/:id') do 
     @db.results_as_hash = true 
     id = params[:id]
     ut = @db.execute("SELECT * FROM users WHERE id = ?", @user_id).first
@@ -198,7 +203,7 @@ post('/posts/:post_id/comments/new') do
     post_id = params[:post_id]
     content = params[:content]
     @db.execute("INSERT INTO comments (content, user_id, post_id, username) VALUES (?,?,?,?)", content, @user_id, post_id, @username)
-    redirect("/posts/#{post_id}/show")
+    redirect("/posts/#{post_id}")
 end 
 
 post('/posts/:id/comment/delete') do 
