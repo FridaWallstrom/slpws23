@@ -13,8 +13,9 @@ h2 #{result['content']}
 hr 
 - if categories.length != 0 
     h2 These are the post's categories: 
-    - categories.each do |category|
-        h3 #{category['name']}
+    - categories.each do |category| #gör till länk som länkar till sida med posts av denna kategorin 
+        h3 #{category['name']} 
+        //a href="/posts/show_by_category"
     hr 
 
 - if logged_in
@@ -22,16 +23,16 @@ hr
         a href="/posts/#{result['id']}/edit" Edit Post
         form method="POST" action="/posts/#{result['id']}/delete"
             input type="submit" value="Delete Post"
-        //form method="POST" action="/posts/#{result['id']}/save"
+        form method="POST" action="/posts/#{result['id']}/save"
             input type="submit" value="Save Post"
         hr 
-    h3 Comment Section:
+    h3 Comment Section
     form action="/posts/#{result['id']}/comments/new" method="post"
         input type="text" name="content" placeholder="content of comment"
         input type="hidden" name="username" value="#{my_username}"
         input type="submit" value="Upload Comment"
 - else 
-    h3 Comment Section:
+    h3 Comment Section
 
 br 
 
