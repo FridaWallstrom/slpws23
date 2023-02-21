@@ -14,13 +14,12 @@ configure do
 end
 
 def connect_to_db(path)
-    db = SQLite3::Database.new('db/project.db')
+    db = SQLite3::Database.new(path)
     db.results_as_hash = true 
     return db
 end 
 
 before do 
-
     @db = connect_to_db('db/project.db')
     cache_control :no_store, :max_age => 0 #för routes
     @user_id = session[:id]
@@ -96,8 +95,8 @@ end
 post('/sort') do
     categories = params[:categories]
     categories_id = []
-    categories.each do |category_id|
-        categories_id << @db.execute("SELECT id FROM categories WHERE name = ?", category_id).first
+    categories.each do |category|
+        categories_id << @db.execute("SELECT id FROM categories WHERE name = ?", category).first
     end  
     if categories != nil
         categories_id.map! do |hash|
@@ -121,14 +120,15 @@ post('/sort') do
     slim(:"posts/index", locals: {posts: result, logged_in: @logged_in, user_id: @user_id})
 end 
 
-get('/posts/:id/user_post') do 
+get('/posts/:id/user_posts') do 
     id = Integer(params[:id])
     result = @db.execute("SELECT * FROM posts WHERE user_id = ? ORDER BY id DESC", id)
     if id != @user_id  
         name = @db.execute("SELECT * FROM users WHERE id = ?", id).first
         username = name["username"]
     end 
-    slim(:"posts/user_post", locals: {posts: result, username: username, user_id: @user_id, id: id})
+    p result
+    slim(:"posts/user_posts", locals: {posts: result, username: username, user_id: @user_id, id: id})
 end 
 
 get('/posts/:id/user_comments') do 
@@ -149,7 +149,7 @@ post('/posts') do
     post_id = @db.execute("SELECT last_insert_rowid()")
     if categories != nil
         categories.each do |category|
-            category_id = @db.execute("SELECT id from categories where name = ?", category)
+            category_id = @db.execute("SELECT id FROM categories WHERE name = ?", category)
             @db.execute("INSERT INTO posts_categories (post_id, category_id) VALUES (?,?)", post_id, category_id)
         end 
     end 
@@ -159,17 +159,9 @@ end
 post('/posts/:id/delete') do 
     id = params[:id]
     @db.execute("DELETE FROM posts WHERE id = ?", id)
+    @db.execute("DELETE FROM posts_categories WHERE post_id = ?", id)
     redirect('/')
 end 
-
-### 
-post('/posts/:id/save') do
-    id = params[:id]
-    @db.execute("INSERT INTO saved_posts (post_id, user_id) VALUES (?,?)", id, @user_id)
-    ####@db.execute("SELECT posts.id, users.id FROM posts INNER JOIN users ON posts.id = users.id")
-    redirect('/posts/#{id}')
-end 
-###
 
 get('/posts/:id/edit') do 
     id = params[:id]
@@ -186,7 +178,7 @@ post('/posts/:id/update') do
     @db.execute("DELETE FROM posts_categories WHERE post_id = ?", id)
     if categories != nil
         categories.each do |category|
-            category_id = @db.execute("SELECT id from categories where name = ?", category)
+            category_id = @db.execute("SELECT id FROM categories WHERE name = ?", category)
             @db.execute("INSERT INTO posts_categories (post_id, category_id) VALUES (?,?)", id, category_id)
         end 
     end 
@@ -212,9 +204,33 @@ get('/posts/:id') do
     end 
     categories = []
     categories_id.each do |category_id|
-        categories << @db.execute("SELECT name FROM categories where id = ?", category_id).first #låt det vara allt i kategory så att det är en länk 
+        categories << @db.execute("SELECT name FROM categories WHERE id = ?", category_id).first #låt det vara allt i kategory så att det är en länk 
     end 
+    #@db.execute("SELECT id FROM posts INNER JOIN categories ON posts.id = categories.id")
     slim(:"posts/show", locals: {result: result, user_id: @user_id, post_user_id: post_user_id, user_type: user_type, logged_in: @logged_in, username: username, comments: comments, my_username: @username, categories: categories})
+end 
+
+post('/posts/:id/save') do
+    id = Integer(params[:id])
+    #frecuency = @db.execute("SELECT post_id, user_id FROM saved_posts WHERE post_id = ?, user_id = ? GROUP BY post_id, user_id HAVING COUNT(*) > 1")
+    @db.execute("INSERT INTO saved_posts (post_id, user_id) VALUES (?,?)", id, @user_id)
+    redirect("/posts/#{id}")
+end 
+
+get('/posts/:id/user_saved_posts') do
+    id = Integer(params[:id])
+    posts_id = @db.execute("SELECT post_id FROM saved_posts WHERE user_id = ?", id)
+    posts_id.map! do |hash|
+        hash["post_id"]
+    end 
+    p posts_id
+    posts = []
+    posts_id.each do |post_id|
+        posts << @db.execute("SELECT * FROM posts WHERE id = ?", post_id)
+    end 
+    #måste få bort inre lista 
+    p posts
+    slim(:"posts/user_saved_posts", locals: {posts: posts})
 end 
 
 post('/posts/:post_id/comments/new') do 
@@ -230,9 +246,8 @@ post('/posts/:id/comment/delete') do
     redirect("/posts/#{@user_id}/user_comments")
 end 
 
+
 #vän, spara posts, 
-###skicka meddelanden till vänner 
-#fixa så att man kan sortera baserat på kategori 
 #kategori ska vara en länk till alla posts i samma kategori 
 
 #inner join? - fråga 
