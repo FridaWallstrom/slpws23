@@ -12,17 +12,14 @@ h1 Public posts:
 hr 
 h2 Sort by category 
 
-form action="/sort" method="post"
-    input type="checkbox" name="categories[]" value="funny" 
-    label Funny
-    input type="checkbox" name="categories[]" value="interesting" 
-    label Interesting
-    input type="checkbox" name="categories[]" value="serious" 
-    label Serious
-    input type="checkbox" name="categories[]" value="random" 
-    label Random
-    input type="checkbox" name="categories[]" value="misc" 
-    label Misc
+form action="/sort" method="GET"
+    - categories.each do |category|
+        - if chosen_categories.include?(category)
+            input id="input_#{category}" type="checkbox" name="categories[]" value="#{category}" checked="checked"
+        - else 
+            input id="input_#{category}" type="checkbox" name="categories[]" value="#{category}"
+        label for="input_#{category}" #{category.capitalize}
+
     input type="submit" value="Sort"
 hr 
 - posts.each do |post|

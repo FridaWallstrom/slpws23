@@ -9,13 +9,14 @@ hr
     hr 
 
 h1 #{result['header']} 
-h2 #{result['content']} 
+p #{result['content']} 
 hr 
-- if categories.length != 0 
-    h2 These are the post's categories: 
-    - categories.each do |category| #gör till länk som länkar till sida med posts av denna kategorin 
-        h3 #{category['name']} 
 
+- if categories.length != 0 
+    h3 These are the post's categories: 
+    - categories.each do |category| #gör till länk till index sorterad efter den kategorin, hur skicka category name???
+        a href="/sort?categories%5B%5D=#{category['name']}" #{category['name']} 
+        br 
     hr 
 
 - if logged_in
@@ -28,18 +29,17 @@ hr
         input type="submit" value="Save Post"
     h3 Comment Section
     form action="/posts/#{result['id']}/comments/new" method="post"
-        input type="text" name="content" placeholder="content of comment"
+        textarea name="content" placeholder="content of comment"
         input type="hidden" name="username" value="#{my_username}"
         input type="submit" value="Upload Comment"
 - else 
     h3 Comment Section
-
 br 
 
 - comments.each do |comment|
     h4 #{comment['content']}
     h5 This was commented by: 
-    - p comment['user_id'] 
-    a href="/user/#{comment['user_id']}/profile" #{comment['username']}
+    - p comment['user_id']
+    a href="/user/#{comment['user_id']}/profile" #{comment['username']} 
     hr
     
