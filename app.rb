@@ -6,13 +6,14 @@ require 'sinatra/reloader'
 require_relative './model.rb'
 # require 'byebug'
 
-
 enable :sessions
 
 configure do
     # set :show_exceptions, false
     set :static_cache_control, [:no_store, :max_age => 0] #uppdatera css, statiska dokument
 end
+#borde göra till klasser??? 
+
 def connect_to_db(path)
     db = SQLite3::Database.new(path)
     db.results_as_hash = true 
@@ -31,18 +32,13 @@ get('/login') do
     slim(:"users/login")
 end 
 
-#finns någon bugg i login/register, fixa! result => nil
 post('/login') do 
     username = params[:username]
     password = params[:password]
-    p username 
-    p password 
     result = @db.execute("SELECT * FROM users WHERE username = ?", username).first
     if result == nil
         slim(:"error")
     end 
-    p result 
-    p BCrypt::Password.new(result["password"])
     if BCrypt::Password.new(result["password"]) == password
         session[:id] = Integer(result["id"])
         session[:username] = result["username"]
@@ -75,7 +71,7 @@ post('/register') do
     password = params[:password]
     password_confirm = params[:password_confirm]
     user_type = params[:user_type]
-    result = @db.execute("SELECT * FROM users WHERE username = ?",username).first
+    result = @db.execute("SELECT * FROM users WHERE username = ?", username).first
     if result
         slim(:"error")
     elsif password == password_confirm
@@ -90,19 +86,12 @@ end
 get('/') do 
     result = @db.execute("SELECT * FROM posts ORDER BY id DESC") 
     chosen_categories = []
-    #gör nedan till en funktion!
-    categories = @db.execute("SELECT name FROM categories")
-    categories.map! do |hash|
-        hash["name"]
-    end 
+    categories = categories_in_db()
     slim(:"posts/index", locals: {posts: result, logged_in: @logged_in, user_id: @user_id, chosen_categories: chosen_categories, categories: categories})
 end 
 
 get('/sort') do 
-    categories = @db.execute("SELECT name FROM categories")
-    categories.map! do |hash|
-        hash["name"]
-    end 
+    categories = categories_in_db()
     chosen_categories = params[:categories]
     categories_id = []
     result = []
@@ -128,8 +117,7 @@ get('/posts/:id/user_posts') do
     id = Integer(params[:id])
     result = @db.execute("SELECT * FROM posts WHERE user_id = ? ORDER BY id DESC", id)
     if id != @user_id  
-        name = @db.execute("SELECT * FROM users WHERE id = ?", id).first
-        username = name["username"]
+        username = @db.execute("SELECT * FROM users WHERE id = ?", id).first["username"]
     end 
     slim(:"posts/user_posts", locals: {posts: result, username: username, user_id: @user_id, id: id})
 end 
@@ -169,31 +157,22 @@ end
 
 get('/posts/:id/edit') do 
     id = params[:id]
-    categories = @db.execute("SELECT name FROM categories")
-    categories.map! do |hash|
-        hash["name"]
-    end 
+    categories = categories_in_db()
     result = @db.execute("SELECT * FROM posts WHERE id = ?", id).first
     slim(:"posts/edit", locals: {result: result, categories: categories})
 end 
 
 post('/posts/:id/update') do 
     id = Integer(params[:id])
-    p "this is id #{id}"
     header = params[:header]
     content = params[:content]
     categories = params[:categories]
     @db.execute("UPDATE posts SET header=?, content=? WHERE id= ?", header, content, id)
-    p id
     @db.execute("DELETE FROM posts_categories WHERE post_id = ?", id)
     if categories != nil
-        p categories
         categories.each do |category|
-            category_id = @db.execute("SELECT * FROM categories WHERE name = ?", category).first
-            p "this is category#{category_id}"
-            cat_id = category_id["id"]
-            p cat_id
-            @db.execute("INSERT INTO posts_categories (post_id, category_id) VALUES (?,?)", id, cat_id)
+            category_id = @db.execute("SELECT * FROM categories WHERE name = ?", category).first["id"]
+            @db.execute("INSERT INTO posts_categories (post_id, category_id) VALUES (?,?)", id, category_id)
         end 
     end 
     redirect('/')
@@ -209,8 +188,7 @@ get('/posts/:id') do
     end 
     result = @db.execute("SELECT * FROM posts WHERE id = ?", id).first
     post_user_id = Integer(result["user_id"])
-    name = @db.execute("SELECT * FROM users WHERE id = ?", post_user_id).first
-    username = name["username"]
+    username = @db.execute("SELECT * FROM users WHERE id = ?", post_user_id).first["username"]
     comments = @db.execute("SELECT * FROM comments WHERE post_id = ? ORDER BY id DESC", id) 
     categories_id = @db.execute("SELECT category_id FROM posts_categories WHERE post_id = ?", id)
     categories_id.map! do |hash|
@@ -218,9 +196,8 @@ get('/posts/:id') do
     end 
     categories = []
     categories_id.each do |category_id|
-        categories << @db.execute("SELECT name FROM categories WHERE id = ?", category_id).first #låt det vara allt i kategory så att det är en länk 
+        categories << @db.execute("SELECT name FROM categories WHERE id = ?", category_id).first
     end 
-    p "this is categories#{categories}"
     #@db.execute("SELECT id FROM posts INNER JOIN categories ON posts.id = categories.id")
     slim(:"posts/show", locals: {result: result, user_id: @user_id, post_user_id: post_user_id, user_type: user_type, logged_in: @logged_in, username: username, comments: comments, my_username: @username, categories: categories})
 end 
@@ -242,13 +219,12 @@ get('/posts/:id/user_saved_posts') do
     end 
     posts = []
     posts_id.each do |post_id|
-        posts << @db.execute("SELECT * FROM posts WHERE id = ?", post_id)
+        posts << @db.execute("SELECT * FROM posts WHERE id = ?", post_id) 
     end 
     posts.flatten!
 
     if id != @user_id  
-        name = @db.execute("SELECT * FROM users WHERE id = ?", id).first
-        username = name["username"]
+        username = @db.execute("SELECT * FROM users WHERE id = ?", id).first["username"]
     end 
     slim(:"posts/user_saved_posts", locals: {posts: posts, username: username, user_id: @user_id, id: id})
 end 
@@ -273,8 +249,7 @@ post('/posts/:id/comment/delete') do
     redirect("/posts/#{@user_id}/user_comments")
 end 
 
-#vän
 #inner join
 #ska kunna se vilka som sparat denna post 
 
-#fråga hur filerna ska ligga - typ comments och saved posts 
+# 
