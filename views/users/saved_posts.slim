@@ -13,5 +13,5 @@ hr
     li 
         a href="/posts/#{post['id']}" #{post["header"]}
         - if user_id == id 
-            form method="POST" action="/saved_posts/#{id}/delete/#{post['id']}" 
+            form method="POST" action="/user/#{id}/saved_posts/#{post['id']}/delete" 
                 input type="submit" value="Delete Saved Post"

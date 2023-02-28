@@ -28,7 +28,7 @@ hr
     form method="POST" action="/posts/#{result['id']}/save"
         input type="submit" value="Save Post"
     h3 Comment Section
-    form action="/posts/#{result['id']}/comments/new" method="post"
+    form action="/posts/#{result['id']}/comments" method="post"
         textarea name="content" placeholder="content of comment"
         input type="hidden" name="username" value="#{my_username}"
         input type="submit" value="Upload Comment"

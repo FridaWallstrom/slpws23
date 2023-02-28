@@ -4,7 +4,7 @@ hr
 - comments.each do |comment|
     li 
         a href="/posts/#{comment['post_id']}" #{comment["content"]}
-        - if id == user_id
-            form method="POST" action="/posts/#{comment['id']}/comment/delete"
+        - if id == user_id || user_type == 0
+            form method="POST" action="/posts/#{comment['post_id']}/comment/#{comment['id']}/delete"
                 input type="submit" value="Delete Comment"
     hr 

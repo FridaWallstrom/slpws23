@@ -4,18 +4,18 @@ form
 hr 
 - if id == user_id
     h2 Welcome back to your profile, #{username}
-    a href="/posts/#{id}/user_posts" My Posts 
+    a href="/users/#{id}/posts" My Posts 
     br 
-    a href="/posts/#{id}/user_comments" My Comments
+    a href="/users/#{id}/comments" My Comments
     br 
-    a href="/posts/#{id}/user_saved_posts" My Saved Posts
+    a href="/users/#{id}/saved_posts" My Saved Posts
 - else 
     h2 This is  #{username}'s Profile
-    a href="/posts/#{id}/user_posts" Posts
+    a href="/users/#{id}/posts" Posts
     br  
-    a href="/posts/#{id}/user_comments" Comments
+    a href="/users/#{id}/comments" Comments
     br 
-    a href="/posts/#{id}/user_saved_posts" Saved Posts
+    a href="/users/#{id}/saved_posts" Saved Posts
 
 // kan se vänner 
 // lista med länkar till vänner 
