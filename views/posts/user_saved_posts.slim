@@ -12,5 +12,6 @@ hr
 - posts.each do |post|
     li 
         a href="/posts/#{post['id']}" #{post["header"]}
-        form method="POST" action="/saved_posts/#{id}/delete/#{post['id']}" 
+        - if user_id == id 
+            form method="POST" action="/saved_posts/#{id}/delete/#{post['id']}" 
                 input type="submit" value="Delete Saved Post"

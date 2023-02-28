@@ -3,7 +3,7 @@ form
 
 form action="/posts/#{result['id']}/update" method="post"
     input type="text" name="header" value="#{result['header']}" required=""
-    textarea name="content" required="" #{result['content']} required=""
+    textarea name="content" #{result['content']} required=""
     input type="hidden" name="id" value="#{result['id']}"
     hr
     - categories.each do |category|
