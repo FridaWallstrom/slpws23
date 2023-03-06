@@ -19,6 +19,13 @@ hr
         br 
     hr 
 
+- if saved_post_users.length != 0
+    h3 These are the people who saved this post: 
+    - saved_post_users.each do |user|
+        a href="/user/#{user["user_id"]}/profile" #{user["username"]}
+        br 
+    hr 
+
 - if logged_in
     - if user_type == 0 || user_id == post_user_id
         a href="/posts/#{result['id']}/edit" Edit Post

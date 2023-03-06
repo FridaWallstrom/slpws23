@@ -129,7 +129,11 @@ end
 get('/users/:id/comments') do 
     id = Integer(params[:id])
     result = @db.get_comments_with_user_id(id)
-    user_type = @db.get_user_with_id(@user_id)["user_type"]
+    if !@logged_in
+        user_type = UserType::DEFAULT
+    else 
+        user_type = @db.get_user_with_id(@user_id)["user_type"]
+    end 
     slim(:"users/comments", locals: {comments: result, id: id, user_id: @user_id, user_type: user_type})
 end 
 
@@ -198,18 +202,8 @@ get('/posts/:id') do #show
         categories << @db.get_category_name_with_category_id(category_id["category_id"])
     end 
 
-    #people who saved the post: 
-    #här behövs innerjoin
-    #saved_post_users_id = @db.execute("SELECT user_id FROM saved_posts WHERE post_id = ?", id)
-    #saved_post_users_id.map! do |hash|
-    #    hash["user_id"]
-    #end 
-
-    #@db.execute("SELECT id FROM posts INNER JOIN categories ON posts.id = categories.id")
-    #x = @db.execute("SELECT id FROM posts INNER JOIN categories ON posts.id = categories.id")
-
-    #@db.execute("INSERT INTO posts_categories (post, category) VALUES (?,?)", x["post"], x["category"])
-    slim(:"posts/show", locals: {result: result, user_id: @user_id, post_user_id: post_user_id, user_type: user_type, logged_in: @logged_in, username: username, comments: comments, my_username: @username, categories: categories})
+    saved_post_users = @db.get_saved_post_users_with_post_id(id)
+    slim(:"posts/show", locals: {result: result, user_id: @user_id, post_user_id: post_user_id, user_type: user_type, logged_in: @logged_in, username: username, comments: comments, my_username: @username, categories: categories, saved_post_users: saved_post_users})
 end 
 
 post('/posts/:id/save') do

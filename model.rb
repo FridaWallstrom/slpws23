@@ -126,5 +126,16 @@ class Database
     def delete_comment(id)
         @db.execute("DELETE FROM comments WHERE id = ?", id)
     end 
+
+    def get_saved_post_users_with_post_id(post_id)
+        result = @db.execute("SELECT * FROM users INNER JOIN saved_posts ON users.id=saved_posts.user_id") 
+        users = []
+        result.each do |value|
+            if value["post_id"] == post_id
+                users << value
+            end 
+        end 
+        return users 
+    end 
 end
 
