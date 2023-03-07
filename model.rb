@@ -3,6 +3,7 @@ class Database
     def initialize
         @db = SQLite3::Database.new('db/project.db')
         @db.results_as_hash = true 
+        @db.execute("PRAGMA foreign_keys = ON")
     end
 
     def get_categories()
@@ -71,8 +72,6 @@ class Database
     end 
 
     def delete_post(post_id)
-        @db.execute("DELETE FROM saved_posts WHERE post_id = ?", post_id)
-        @db.execute("DELETE FROM posts_categories WHERE post_id = ?", post_id)
         @db.execute("DELETE FROM posts WHERE id = ?", post_id)
     end 
 
@@ -92,7 +91,7 @@ class Database
     end 
 
     def post_saved_by_user?(post_id, user_id)
-        @db.execute("SELECT id FROM saved_posts WHERE post_id = ? AND user_id = ?", post_id, user_id).length == 0 
+        @db.execute("SELECT id FROM saved_posts WHERE post_id = ? AND user_id = ?", post_id, user_id).length > 0 
     end 
 
     def add_saved_post(post_id, user_id)
@@ -128,7 +127,7 @@ class Database
     end 
 
     def get_saved_post_users_with_post_id(post_id)
-        result = @db.execute("SELECT * FROM users INNER JOIN saved_posts ON users.id=saved_posts.user_id") 
+        result = @db.execute("SELECT * FROM users INNER JOIN saved_posts ON users.id = saved_posts.user_id") 
         users = []
         result.each do |value|
             if value["post_id"] == post_id

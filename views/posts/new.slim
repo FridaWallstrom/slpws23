@@ -3,23 +3,15 @@ form
 br
 h2 Create Post
 
-//gör loop
 form action="/posts" method="post"
     input type="text" name="header" placeholder="header of post" required=""
     br  
  
     textarea name="content" placeholder="content of post" required="" 
-    hr
-    input type="checkbox" name="categories[]" value="funny" 
-    label Funny
-    input type="checkbox" name="categories[]" value="interesting" 
-    label Interesting
-    input type="checkbox" name="categories[]" value="serious" 
-    label Serious
-    input type="checkbox" name="categories[]" value="random" 
-    label Random
-    input type="checkbox" name="categories[]" value="misc" 
-    label Misc
+    hr 
+    - categories.each do |category|
+        input id="input_#{category}" type="checkbox" name="categories[]" value="#{category}"
+        label for="input_#{category}" #{category.capitalize}
     hr 
     input type="hidden" name="id" value="#{id}"
     input type="submit" value="Create Post"

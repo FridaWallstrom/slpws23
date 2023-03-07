@@ -34,7 +34,7 @@ post('/login') do
     user_id = @db.get_user_id_with_username(username)
     result = @db.get_user_with_id(user_id)
     if result == nil
-        sleep(5)
+        sleep(5)    
         notice = "Wrong password or username!"
         return slim(:"error", locals: {notice: notice})
     end 
@@ -138,15 +138,21 @@ get('/users/:id/comments') do
 end 
 
 get('/posts/new') do 
-    slim(:"posts/new", locals: {id: @user_id})
+    categories = @db.get_categories()
+    slim(:"posts/new", locals: {id: @user_id, categories: categories})
 end 
 
 post('/posts') do #new
     content = params[:content]
     header = params[:header]
     categories = params[:categories]
-    @db.add_post(header, content, @user_id, categories)
-    redirect('/')
+    if @logged_in
+        @db.add_post(header, content, @user_id, categories)
+        redirect('/')
+    else 
+        notice = "You have no powaa here hacker!"
+        slim(:"error", locals: {notice: notice})
+    end 
 end 
 
 post('/posts/:id/delete') do 
@@ -154,7 +160,7 @@ post('/posts/:id/delete') do
     user_type = @db.get_user_with_id(@user_id)["user_type"]
     if user_type == UserType::DEFAULT
         if @db.get_post_with_id(id)["user_id"] != @user_id
-            notice = "You have no powaa here!"
+            notice = "You have no powaa here hacker!"
             return slim(:"error", locals: {notice: notice})
         end 
     end 
@@ -177,7 +183,7 @@ post('/posts/:id/update') do
     user_type = @db.get_user_with_id(@user_id)["user_type"]
     if user_type == UserType::DEFAULT
         if @db.get_post_with_id(id)["user_id"] != @user_id
-            notice = "You have no powaa here!"
+            notice = "You have no powaa here hacker!"
             return slim(:"error", locals: {notice: notice})
         end 
     end 
@@ -208,8 +214,10 @@ end
 
 post('/posts/:id/save') do
     id = Integer(params[:id]) 
-    if !@db.post_saved_by_user?(id, @user_id)
-        @db.add_saved_post(id, @user_id)
+    if @logged_in
+        if !@db.post_saved_by_user?(id, @user_id)
+            @db.add_saved_post(id, @user_id)
+        end 
     end 
     redirect("/posts/#{id}")
 end 
@@ -230,14 +238,23 @@ end
 post('/users/:user_id/saved_posts/:id/delete') do
     id = Integer(params[:id]) 
     user_id = Integer(params[:user_id])
-    @db.delete_saved_post(id, user_id)
-    redirect("/users/#{user_id}/saved_posts")
+    if @logged_in
+        if @user_id == user_id
+            @db.delete_saved_post(id, user_id)
+            redirect("/users/#{user_id}/saved_posts")
+        end 
+    else 
+        notice = "You have no powaa here hacker!"
+        slim(:"error", locals: {notice: notice})
+    end 
 end 
 
 post('/posts/:post_id/comments') do 
     post_id = params[:post_id]
     content = params[:content]
-    @db.add_comment(content, @user_id, post_id, @username)
+    if @logged_in 
+        @db.add_comment(content, @user_id, post_id, @username)
+    end 
     redirect("/posts/#{post_id}")
 end 
 
@@ -247,7 +264,7 @@ post('/posts/:post_id/comment/:id/delete') do
     user_id = @db.get_comment_with_id(id)["user_id"]
     if user_type == UserType::DEFAULT
         if @db.get_comment_with_id(id)["user_id"] != @user_id
-            notice = "You have no powaa here!"
+            notice = "You have no powaa here hacker!"
             return slim(:"error", locals: {notice: notice})
         end 
     end 
