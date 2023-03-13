@@ -4,8 +4,11 @@ require 'sqlite3'
 require 'bcrypt'
 require 'sinatra/reloader'
 require_relative './model.rb'
+include Model 
 
 enable :sessions
+
+NO_ACCESS_NOTICE = "You have no powaa here hacker!"
 
 module UserType
     ADMIN = 0
@@ -17,17 +20,26 @@ configure do
 end
 
 before do 
-    cache_control :no_store, :max_age => 0 #för routes
+    cache_control :no_store, :max_age => 0 
     @user_id = session[:id]
     @logged_in = session[:login] 
     @username = session[:username]
     @db = Database.new 
 end 
 
+# Displays login form
+#
 get('/login') do 
     slim(:"users/login")
 end 
 
+# Attempts login and updates the session 
+#
+# @param [String] username, The username 
+# @param [String] password, The password 
+#
+# @see Model#get_user_id_with_username
+# @see Model#get_user_with_id
 post('/login') do 
     username = params[:username]
     password = params[:password]
@@ -50,22 +62,39 @@ post('/login') do
     end 
 end 
 
+# Attempts logout and updates the session
+#
 post('/logout') do
     session[:login] = false 
     session[:id] = nil
     redirect('/')
 end 
 
+# Displays a register form
+#
 get('/register') do 
     slim(:"users/register")
 end 
 
+# Displays the profile of a user 
+#
+# @param [Integer] :id, The id of the user 
+#
+# @see Model#get_user_with_id
 get('/user/:id/profile') do 
     id = Integer(params[:id])
     username = @db.get_user_with_id(id)['username']
     slim(:"users/profile", locals: {username: username, id: id, user_id: @user_id})
 end 
 
+# Attempts register if username is long enough and not already taken, and the password matches the confirmed password, and updates the session
+#
+# @param [String] username, The username 
+# @param [String] password, The password 
+# @param [String] password_confirm, The repeated password
+#
+# @see Model#get_user_id_with_username
+# @see Model#add_user
 post('/register') do 
     username = params[:username]
     if username.length < 3 
@@ -89,6 +118,10 @@ post('/register') do
     end 
 end 
 
+# Displays landing page 
+#
+# @see Model#get_posts
+# @see Model#get_categories
 get('/') do 
     result = @db.get_posts()
     chosen_categories = []
@@ -96,6 +129,13 @@ get('/') do
     slim(:"posts/index", locals: {posts: result, logged_in: @logged_in, user_id: @user_id, chosen_categories: chosen_categories, categories: categories})
 end 
 
+# Displays posts based on sorting parameters
+#
+# @param [String] chosen_categories, The search parameters delimited by (???)
+# @see Model#get_categories
+# @see Model#get_category_id_with_name
+# @see Model#get_posts_id_with_category_id
+# @see Model#get_post_with_id
 get('/sort') do 
     categories = @db.get_categories()
     chosen_categories = params[:categories]
@@ -117,6 +157,12 @@ get('/sort') do
     slim(:"posts/index", locals: {posts: result, logged_in: @logged_in, user_id: @user_id, chosen_categories: chosen_categories, categories: categories})
 end 
 
+# Displays the posts of a user
+#
+# @param [Integer] :id, The ID of the user 
+#
+# @see Model#get_posts_with_user_id
+# @see Model#get_user_with_id
 get('/users/:id/posts') do 
     id = Integer(params[:id])
     result = @db.get_posts_with_user_id(id).reverse
@@ -126,6 +172,12 @@ get('/users/:id/posts') do
     slim(:"users/posts", locals: {posts: result, username: username, user_id: @user_id, id: id})
 end 
 
+# Displays the comments of a user 
+#
+# @param [Integer] :id, The ID of the user 
+#
+# @see Model#get_comments_with_user_id
+# @see Model#get_user_with_id
 get('/users/:id/comments') do 
     id = Integer(params[:id])
     result = @db.get_comments_with_user_id(id)
@@ -137,11 +189,21 @@ get('/users/:id/comments') do
     slim(:"users/comments", locals: {comments: result, id: id, user_id: @user_id, user_type: user_type})
 end 
 
+# Displays a post form
+#
+# @see Model#get_categories
 get('/posts/new') do 
     categories = @db.get_categories()
     slim(:"posts/new", locals: {id: @user_id, categories: categories})
 end 
 
+# Creates a new post if user is logged in and redirects to '/' 
+#
+# @param [String] content, The content of the post 
+# @param [String] header, The header of the post  
+# @param [Array], The categories of the post 
+#
+# @see Model#add_post
 post('/posts') do #new
     content = params[:content]
     header = params[:header]
@@ -150,24 +212,35 @@ post('/posts') do #new
         @db.add_post(header, content, @user_id, categories)
         redirect('/')
     else 
-        notice = "You have no powaa here hacker!"
-        slim(:"error", locals: {notice: notice})
+        slim(:"error", locals: {notice: NO_ACCESS_NOTICE})
     end 
 end 
 
+# Deletes an existing post if user is admin or it is their own post and redirects to '/'
+#
+# @param[Integer] :id, The ID of the post 
+#
+# @see Model#get_user_with_id
+# @see Model#get_post_with_id
+# @see Model#delete_post
 post('/posts/:id/delete') do 
     id = Integer(params[:id])
     user_type = @db.get_user_with_id(@user_id)["user_type"]
     if user_type == UserType::DEFAULT
         if @db.get_post_with_id(id)["user_id"] != @user_id
-            notice = "You have no powaa here hacker!"
-            return slim(:"error", locals: {notice: notice})
+            return slim(:"error", locals: {notice: NO_ACCESS_NOTICE})
         end 
     end 
     @db.delete_post(id)
     redirect('/')
 end 
 
+# Displays a post form
+#
+# @param [Integer] :id, The ID of the post 
+#
+# @see Model#get_categories
+# @see Model#get_post_with_id
 get('/posts/:id/edit') do 
     id = Integer(params[:id])
     categories = @db.get_categories()
@@ -175,6 +248,16 @@ get('/posts/:id/edit') do
     slim(:"posts/edit", locals: {result: result, categories: categories})
 end 
 
+# Updates an existing post if user is admin or it is their own post and redirects to '/'
+#
+# @param [Integer] :id, The ID of the post 
+# @param [String] header, The new header of the post 
+# @param [String] content, The new content of the post 
+# @param [Array] categories, The new categories of the post 
+#
+# @see Model#get_user_with_id
+# @see Model#get_post_with_id
+# @see Model#update_post
 post('/posts/:id/update') do 
     id = Integer(params[:id])
     header = params[:header]
@@ -183,15 +266,24 @@ post('/posts/:id/update') do
     user_type = @db.get_user_with_id(@user_id)["user_type"]
     if user_type == UserType::DEFAULT
         if @db.get_post_with_id(id)["user_id"] != @user_id
-            notice = "You have no powaa here hacker!"
-            return slim(:"error", locals: {notice: notice})
+            return slim(:"error", locals: {notice: NO_ACCESS_NOTICE})
         end 
     end 
     @db.update_post(header, content, id, categories)
     redirect('/')
 end 
 
-get('/posts/:id') do #show 
+# Displays a single post (who posted it, it's comments, the people who saved it, and editing page if it's their own post)
+#
+# @param [Integer] :id, The ID of the post ##ska det vara integer eller string 
+#
+# @see Model#get_user_with_id
+# @see Model#get_post_with_id
+# @see Model#get_comments_with_post_id
+# @see Model#get_category_id_with_post_id
+# @see Model#get_category_name_with_category_id
+# @see Model#get_saved_post_users_with_post_id
+get('/posts/:id') do 
     id = Integer(params[:id])
     if !@logged_in
         user_type = UserType::DEFAULT
@@ -212,6 +304,12 @@ get('/posts/:id') do #show
     slim(:"posts/show", locals: {result: result, user_id: @user_id, post_user_id: post_user_id, user_type: user_type, logged_in: @logged_in, username: username, comments: comments, my_username: @username, categories: categories, saved_post_users: saved_post_users})
 end 
 
+# Saves the post if user is logged in and hasn't already saved it, and redirects to '/posts/:id'
+#
+# @param [Integer] :id, The ID of the post 
+#
+# @see Model#post_saved_by_user
+# @see Model#add_saved_post
 post('/posts/:id/save') do
     id = Integer(params[:id]) 
     if @logged_in
@@ -222,6 +320,13 @@ post('/posts/:id/save') do
     redirect("/posts/#{id}")
 end 
 
+# Displays the saved posts of a user
+#
+# @param [Integer] :id, The ID of the user 
+#
+# @see Model#get_saved_posts_with_user_id
+# @see Model#get_post_with_id
+# @see Model#get_user_with_id
 get('/users/:id/saved_posts') do
     id = Integer(params[:id])
     posts_id = @db.get_saved_posts_with_user_id(id)
@@ -235,6 +340,12 @@ get('/users/:id/saved_posts') do
     slim(:"users/saved_posts", locals: {posts: posts, username: username, user_id: @user_id, id: id})
 end 
 
+# Deletes an existing saved post if it is their own and redirects to '/users/:id/saved_posts'
+#
+# @param[Integer] :id, The ID of the post 
+# @param[Integer] :user_id, The ID of the user 
+#
+# @see Model#delete_saved_post
 post('/users/:user_id/saved_posts/:id/delete') do
     id = Integer(params[:id]) 
     user_id = Integer(params[:user_id])
@@ -244,13 +355,18 @@ post('/users/:user_id/saved_posts/:id/delete') do
             redirect("/users/#{user_id}/saved_posts")
         end 
     else 
-        notice = "You have no powaa here hacker!"
-        slim(:"error", locals: {notice: notice})
+        slim(:"error", locals: {notice: NO_ACCESS_NOTICE})
     end 
 end 
 
+# Creates a new comment if user is logged in and redirects to '/posts/id'
+#
+# @param [Integer] :post_id, The ID of the post 
+# @param [String] content, The content of the comment  
+#
+# @see Model#add_comment
 post('/posts/:post_id/comments') do 
-    post_id = params[:post_id]
+    post_id = Integer(params[:post_id])
     content = params[:content]
     if @logged_in 
         @db.add_comment(content, @user_id, post_id, @username)
@@ -258,14 +374,22 @@ post('/posts/:post_id/comments') do
     redirect("/posts/#{post_id}")
 end 
 
+# Deletes an existing comment if user is admin or it is their own comment and redirects to '/users/:id/comments'
+#
+# @param[Integer] :id, The ID of the comment 
+# @param[Integer] :post_id, The ID of the post 
+#
+# @see Model#get_user_with_id
+# @see Model#get_comment_with_id
+# @see Model#get_comment_with_id
+# @see Model#delete_comment
 post('/posts/:post_id/comment/:id/delete') do 
     id = Integer(params[:id])
     user_type = @db.get_user_with_id(@user_id)["user_type"]
     user_id = @db.get_comment_with_id(id)["user_id"]
     if user_type == UserType::DEFAULT
         if @db.get_comment_with_id(id)["user_id"] != @user_id
-            notice = "You have no powaa here hacker!"
-            return slim(:"error", locals: {notice: notice})
+            return slim(:"error", locals: {notice: NO_ACCESS_NOTICE})
         end 
     end 
     @db.delete_comment(id)
