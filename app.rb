@@ -204,7 +204,7 @@ end
 # @param [Array], The categories of the post 
 #
 # @see Model#add_post
-post('/posts') do #new
+post('/posts') do
     content = params[:content]
     header = params[:header]
     categories = params[:categories]
@@ -226,12 +226,14 @@ end
 post('/posts/:id/delete') do 
     id = Integer(params[:id])
     user_type = @db.get_user_with_id(@user_id)["user_type"]
-    if user_type == UserType::DEFAULT
-        if @db.get_post_with_id(id)["user_id"] != @user_id
-            return slim(:"error", locals: {notice: NO_ACCESS_NOTICE})
+    if @logged_in
+        if user_type == UserType::DEFAULT
+            if @db.get_post_with_id(id)["user_id"] != @user_id
+                return slim(:"error", locals: {notice: NO_ACCESS_NOTICE})
+            end 
         end 
+        @db.delete_post(id)
     end 
-    @db.delete_post(id)
     redirect('/')
 end 
 
@@ -264,18 +266,20 @@ post('/posts/:id/update') do
     content = params[:content]
     categories = params[:categories]
     user_type = @db.get_user_with_id(@user_id)["user_type"]
-    if user_type == UserType::DEFAULT
-        if @db.get_post_with_id(id)["user_id"] != @user_id
-            return slim(:"error", locals: {notice: NO_ACCESS_NOTICE})
+    if @logged_in
+        if user_type == UserType::DEFAULT
+            if @db.get_post_with_id(id)["user_id"] != @user_id
+                return slim(:"error", locals: {notice: NO_ACCESS_NOTICE})
+            end 
         end 
+        @db.update_post(header, content, id, categories)
     end 
-    @db.update_post(header, content, id, categories)
     redirect('/')
 end 
 
 # Displays a single post (who posted it, it's comments, the people who saved it, and editing page if it's their own post)
 #
-# @param [Integer] :id, The ID of the post ##ska det vara integer eller string 
+# @param [Integer] :id, The ID of the post
 #
 # @see Model#get_user_with_id
 # @see Model#get_post_with_id
@@ -387,11 +391,13 @@ post('/posts/:post_id/comment/:id/delete') do
     id = Integer(params[:id])
     user_type = @db.get_user_with_id(@user_id)["user_type"]
     user_id = @db.get_comment_with_id(id)["user_id"]
-    if user_type == UserType::DEFAULT
-        if @db.get_comment_with_id(id)["user_id"] != @user_id
-            return slim(:"error", locals: {notice: NO_ACCESS_NOTICE})
+    if @logged_in
+        if user_type == UserType::DEFAULT
+            if @db.get_comment_with_id(id)["user_id"] != @user_id
+                return slim(:"error", locals: {notice: NO_ACCESS_NOTICE})
+            end 
         end 
+        @db.delete_comment(id)
     end 
-    @db.delete_comment(id)
     redirect("/users/#{user_id}/comments")
 end 
