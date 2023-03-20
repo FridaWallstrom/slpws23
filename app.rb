@@ -131,7 +131,8 @@ end
 
 # Displays posts based on sorting parameters
 #
-# @param [String] chosen_categories, The search parameters delimited by (???)
+# @param [String] chosen_categories, The searched for categories
+#
 # @see Model#get_categories
 # @see Model#get_category_id_with_name
 # @see Model#get_posts_id_with_category_id
@@ -201,7 +202,7 @@ end
 #
 # @param [String] content, The content of the post 
 # @param [String] header, The header of the post  
-# @param [Array], The categories of the post 
+# @param [Array] categories, The categories of the post 
 #
 # @see Model#add_post
 post('/posts') do

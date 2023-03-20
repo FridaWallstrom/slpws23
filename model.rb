@@ -43,7 +43,6 @@ module Model
         #
         # @param [String] name The name of the category 
         #
-        # 
         # @return [Integer] The id of the category
         # @return nil if not found
         def get_category_id_with_name(name)
@@ -92,9 +91,9 @@ module Model
         
         # Adds a new user 
         #
-        #  @param [String] username The name of the user 
-        #  @param [String] password_digest The (hashed and salted) password of the user 
-        #  @param [Integer] user_type The user type of the user 
+        # @param [String] username The name of the user 
+        # @param [String] password_digest The (hashed and salted) password of the user 
+        # @param [Integer] user_type The user type of the user 
         #
         def add_user(username, password_digest, user_type)
             @db.execute("INSERT INTO users (username, password, user_type) VALUES (?,?,?)", username, password_digest, user_type)
@@ -141,7 +140,7 @@ module Model
         # Adds a new post 
         #
         # @param [String] header The header of the post 
-        # @param [String] conetne The content of the post 
+        # @param [String] content The content of the post 
         # @param [Integer] user_id The id of the user 
         # @param [Array] categories The categories of the post 
         #
