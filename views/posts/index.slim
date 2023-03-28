@@ -14,7 +14,7 @@ h2 Sort by category
 
 form action="/sort" method="GET"
     - categories.each do |category|
-        - if chosen_categories.include?(category)
+        - if chosen_categories != nil && chosen_categories.include?(category)
             input id="input_#{category}" type="checkbox" name="categories[]" value="#{category}" checked="checked"
         - else 
             input id="input_#{category}" type="checkbox" name="categories[]" value="#{category}"

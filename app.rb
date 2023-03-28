@@ -142,7 +142,8 @@ get('/sort') do
     chosen_categories = params[:categories]
     result = []
     posts_id = []
-    if chosen_categories != nil
+
+    if chosen_categories != nil 
         chosen_categories.each do |category|
             category_id = @db.get_category_id_with_name(category)
             post_id = @db.get_posts_id_with_category_id(category_id)
