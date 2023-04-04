@@ -8,7 +8,7 @@ include Model
 
 enable :sessions
 
-NO_ACCESS_NOTICE = "You have no powaa here hacker!"
+NO_ACCESS_NOTICE = "You have no powaa here, hacker!"
 
 module UserType
     ADMIN = 0
