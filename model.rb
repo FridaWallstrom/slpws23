@@ -1,4 +1,8 @@
 require 'sqlite3'
+require 'bcrypt'
+
+class UnauthorizedAccess < StandardError
+end 
 
 module Model 
     class Database
@@ -7,6 +11,36 @@ module Model
             @db.results_as_hash = true 
             @db.execute("PRAGMA foreign_keys = ON")
         end
+
+        # Attempts login 
+        #
+        # @param [String] username The name of the user
+        # @param [String] password The password of the user   
+        #
+        # @see Model#get_user_id_with_username
+        # @see Model#get_user_with_id
+        #
+        # @return [Hash]
+        #   * :id [Integer] The id of the category
+        #   * :user_type [Integer] The user type of the user 
+        #   * :username [String] The name of the user 
+        #   * :password [String] The (hashed and salted) password of the user 
+        # @return nil if not found
+        def try_login(username, password)
+            user_id = get_user_id_with_username(username)
+            result = get_user_with_id(user_id)
+            if result == nil
+                sleep(5)    
+                notice = "Wrong password or username!"
+                raise UnauthorizedAccess.new(notice)
+            end 
+            if BCrypt::Password.new(result["password"]) != password
+                sleep(5)
+                notice = "Wrong password or username!"
+                raise UnauthorizedAccess.new(notice)
+            end  
+            return result 
+        end 
 
         # Gets the names of all categories 
         #
@@ -92,10 +126,20 @@ module Model
         # Adds a new user 
         #
         # @param [String] username The name of the user 
-        # @param [String] password_digest The (hashed and salted) password of the user 
         # @param [Integer] user_type The user type of the user 
         #
-        def add_user(username, password_digest, user_type)
+        # @see Model#get_user_id_with_username
+        def add_user(username, password, user_type)
+            if username.length < 3 
+                notice = "Username is too short, needs to contain at least 3 characters" 
+                raise UnauthorizedAccess.new(notice)
+            end 
+            user_id = get_user_id_with_username(username)
+            if user_id
+                notice = "Username is already in use, try a new one!" 
+                raise UnauthorizedAccess.new(notice)
+            end 
+            password_digest = BCrypt::Password.create(password)
             @db.execute("INSERT INTO users (username, password, user_type) VALUES (?,?,?)", username, password_digest, user_type)
         end 
         

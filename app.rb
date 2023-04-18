@@ -1,7 +1,6 @@
 require 'sinatra'
 require 'slim'
 require 'sqlite3'
-require 'bcrypt'
 require 'sinatra/reloader'
 require_relative './model.rb'
 include Model 
@@ -27,6 +26,31 @@ before do
     @db = Database.new 
 end 
 
+# Checks if a user authorized 
+#
+# @param [Integer] user_type, The type of the user
+# @param [Integer] current_user_id, The id of the user
+# @param [Integer] needed_user_id, The id needed for permission 
+#
+def check_user(user_type, current_user_id, needed_user_id)
+    if @logged_in
+        if user_type == UserType::ADMIN
+            return true 
+        end 
+        if needed_user_id == current_user_id
+            return true 
+        end
+    end
+    raise UnauthorizedAccess.new(NO_ACCESS_NOTICE)   
+end 
+
+# Displays the error page
+#
+error UnauthorizedAccess do 
+    status 403
+    slim(:"error", locals: {notice: env['sinatra.error'].message})
+end 
+
 # Displays login form
 #
 get('/login') do 
@@ -38,28 +62,15 @@ end
 # @param [String] username, The username 
 # @param [String] password, The password 
 #
-# @see Model#get_user_id_with_username
-# @see Model#get_user_with_id
+# @see Model#try_login
 post('/login') do 
     username = params[:username]
     password = params[:password]
-    user_id = @db.get_user_id_with_username(username)
-    result = @db.get_user_with_id(user_id)
-    if result == nil
-        sleep(5)    
-        notice = "Wrong password or username!"
-        return slim(:"error", locals: {notice: notice})
-    end 
-    if BCrypt::Password.new(result["password"]) == password
-        session[:id] = Integer(result["id"])
-        session[:username] = result["username"]
-        session[:login] = true 
-        redirect('/')
-    else 
-        sleep(5)
-        notice = "Wrong password or username!"
-        slim(:"error", locals: {notice: notice})    
-    end 
+    result = @db.try_login(username, password)
+    session[:id] = Integer(result["id"])
+    session[:username] = result["username"]
+    session[:login] = true 
+    redirect('/')  
 end 
 
 # Attempts logout and updates the session
@@ -93,29 +104,18 @@ end
 # @param [String] password, The password 
 # @param [String] password_confirm, The repeated password
 #
-# @see Model#get_user_id_with_username
 # @see Model#add_user
 post('/register') do 
     username = params[:username]
-    if username.length < 3 
-        notice = "Username is too short, needs to contain at least 3 characters" 
-        return slim(:"error", locals: {notice: notice})
-    end 
     password = params[:password]
     password_confirm = params[:password_confirm]
-    user_type = params[:user_type]
-    user_id = @db.get_user_id_with_username(username)
-    if user_id
-        notice = "Username is already in use, try a new one!" 
-        slim(:"error", locals: {notice: notice})
-    elsif password == password_confirm
-        password_digest = BCrypt::Password.create(password)
-        @db.add_user(username, password_digest, user_type)
-        redirect("/")
-    else 
+    user_type = UserType::DEFAULT
+    if password != password_confirm
         notice = "Password does not match!" 
-        slim(:"error", locals: {notice: notice})
+        raise UnauthorizedAccess.new(notice)
     end 
+    @db.add_user(username, password, user_type)
+    redirect("/")
 end 
 
 # Displays landing page 
@@ -214,7 +214,7 @@ post('/posts') do
         @db.add_post(header, content, @user_id, categories)
         redirect('/')
     else 
-        slim(:"error", locals: {notice: NO_ACCESS_NOTICE})
+        raise UnauthorizedAccess.new(NO_ACCESS_NOTICE)
     end 
 end 
 
@@ -225,17 +225,12 @@ end
 # @see Model#get_user_with_id
 # @see Model#get_post_with_id
 # @see Model#delete_post
+# @see App#check_user
 post('/posts/:id/delete') do 
     id = Integer(params[:id])
     user_type = @db.get_user_with_id(@user_id)["user_type"]
-    if @logged_in
-        if user_type == UserType::DEFAULT
-            if @db.get_post_with_id(id)["user_id"] != @user_id
-                return slim(:"error", locals: {notice: NO_ACCESS_NOTICE})
-            end 
-        end 
-        @db.delete_post(id)
-    end 
+    check_user(user_type, @user_id, @db.get_post_with_id(id)["user_id"])
+    @db.delete_post(id)
     redirect('/')
 end 
 
@@ -262,20 +257,15 @@ end
 # @see Model#get_user_with_id
 # @see Model#get_post_with_id
 # @see Model#update_post
+# @see App#check_user
 post('/posts/:id/update') do 
     id = Integer(params[:id])
     header = params[:header]
     content = params[:content]
     categories = params[:categories]
     user_type = @db.get_user_with_id(@user_id)["user_type"]
-    if @logged_in
-        if user_type == UserType::DEFAULT
-            if @db.get_post_with_id(id)["user_id"] != @user_id
-                return slim(:"error", locals: {notice: NO_ACCESS_NOTICE})
-            end 
-        end 
-        @db.update_post(header, content, id, categories)
-    end 
+    check_user(user_type, @user_id, @db.get_post_with_id(id)["user_id"])
+    @db.update_post(header, content, id, categories)
     redirect('/')
 end 
 
@@ -361,7 +351,7 @@ post('/users/:user_id/saved_posts/:id/delete') do
             redirect("/users/#{user_id}/saved_posts")
         end 
     else 
-        slim(:"error", locals: {notice: NO_ACCESS_NOTICE})
+        raise UnauthorizedAccess.new(NO_ACCESS_NOTICE)
     end 
 end 
 
@@ -389,17 +379,12 @@ end
 # @see Model#get_comment_with_id
 # @see Model#get_comment_with_id
 # @see Model#delete_comment
+# @see App#check_user
 post('/posts/:post_id/comment/:id/delete') do 
     id = Integer(params[:id])
     user_type = @db.get_user_with_id(@user_id)["user_type"]
     user_id = @db.get_comment_with_id(id)["user_id"]
-    if @logged_in
-        if user_type == UserType::DEFAULT
-            if @db.get_comment_with_id(id)["user_id"] != @user_id
-                return slim(:"error", locals: {notice: NO_ACCESS_NOTICE})
-            end 
-        end 
-        @db.delete_comment(id)
-    end 
+    check_user(user_type, @user_id, @db.get_comment_with_id(id)["user_id"])
+    @db.delete_comment(id)
     redirect("/users/#{user_id}/comments")
 end 
