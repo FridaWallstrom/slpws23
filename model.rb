@@ -47,10 +47,9 @@ module Model
         # @return [Array] containing the names of all categories 
         def get_categories()
             categories = @db.execute("SELECT name FROM categories")
-            categories.map! do |hash|
+            return categories.map do |hash|
                 hash["name"]
             end 
-            return categories 
         end 
 
         # Inserts a new row in the posts_categories table 

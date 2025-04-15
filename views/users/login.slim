@@ -1,11 +1,32 @@
-form 
-    input type="button" value="Back" onclick="history.back()"
-hr 
-
-form action="/login" method="POST"
-    input type="text" name="username" placeholder="Enter username" required=""
-    input type="password" name="password" placeholder="Enter password" required=""
-    input type="submit" value="Log in"
-
-h3 Don't have an account? 
-a href="/register" Register
+doctype html
+html
+  head
+    meta charset="UTF-8"
+    meta name="viewport" content="width=device-width, initial-scale=1.0"
+    title Login
+    link rel="stylesheet" href="/style.css"
+  
+  body
+    .container
+      .form-card.login-card
+        button.back-button(onclick="history.back()")
+          i.arrow-left
+          | Back
+        
+        h2.form-title Login to your account
+        
+        form.login-form action="/login" method="POST"
+          .form-group
+            label for="username" Username
+            input.form-control type="text" id="username" name="username" placeholder="Enter username" required=""
+          
+          .form-group
+            label for="password" Password
+            input.form-control type="password" id="password" name="password" placeholder="Enter password" required=""
+          
+          .form-actions
+            button.submit-btn type="submit" Log in
+        
+        .register-prompt
+          h3.register-text Don't have an account?
+          a.register-link href="/register" Register

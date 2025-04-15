@@ -1,14 +1,36 @@
-form 
-    input type="button" value="Back" onclick="history.back()"
-
-- if id == user_id
-    hr
-    a href="/posts/new" New Post
-    h2 These are your posts: 
-- else 
-    h2 These are #{username}'s posts: 
-hr 
-
-- posts.each do |post|
-    li 
-        a href="/posts/#{post['id']}" #{post["header"]}
+doctype html
+html
+  head
+    meta charset="UTF-8"
+    meta name="viewport" content="width=device-width, initial-scale=1.0"
+    title User Profile
+    link rel="stylesheet" href="/style.css"
+  
+  body
+    .container
+      .content-card
+        button.back-button(onclick="history.back()")
+          i.arrow-left
+          | Back
+        
+        .content-section
+          - if id == user_id
+            .my-profile-header
+              h2.section-title My Profile
+              a.new-post-btn href="/posts/new"
+                i.plus-icon
+                | New Post
+          - else 
+            h2.section-title #{username}'s Profile
+          
+          .profile-posts
+            - if id == user_id
+              h3.posts-heading These are your posts:
+            - else
+              h3.posts-heading These are #{username}'s posts:
+            
+            .posts-list
+              ul
+                - posts.each do |post|
+                  li.post-item
+                    a.post-link href="/posts/#{post['id']}" #{post["header"]}

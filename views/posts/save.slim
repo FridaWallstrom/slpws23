@@ -1,6 +1,23 @@
-form 
-    input type="button" value="Back" onclick="history.back()"
-
-- posts.each do |post|
-    li 
-        a href="/posts/#{post['id']}/show" #{post["header"]}
+doctype html
+html
+  head
+    meta charset="UTF-8"
+    meta name="viewport" content="width=device-width, initial-scale=1.0"
+    title Posts List
+    link rel="stylesheet" href="/style.css"
+  
+  body
+    .container
+      .nav-card
+        button.back-button(onclick="history.back()")
+          i.arrow-left
+          | Back
+        
+        .content-section
+          h2.section-title Posts
+          
+          .posts-list
+            ul
+              - posts.each do |post|
+                li.post-item
+                  a.post-link href="/posts/#{post['id']}/show" #{post["header"]}

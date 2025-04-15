@@ -1,51 +1,70 @@
-form 
-    input type="button" value="Back" onclick="history.back()"
-
-hr 
-
-- if user_id != post_user_id
-    p This was posted by: 
-    a href="/user/#{post_user_id}/profile" #{username}
-    hr 
-
-h1 #{result['header']} 
-p #{result['content']} 
-hr 
-
-- if categories.length != 0 
-    h3 These are the post's categories: 
-    - categories.each do |category| 
-        a href="/sort?categories%5B%5D=#{category['name']}" #{category['name']} 
-        br 
-    hr 
-
-- if saved_post_users.length != 0
-    h3 These are the people who saved this post: 
-    - saved_post_users.each do |user|
-        a href="/user/#{user["user_id"]}/profile" #{user["username"]}
-        br 
-    hr 
-
-- if logged_in
-    - if user_type == 0 || user_id == post_user_id
-        a href="/posts/#{result['id']}/edit" Edit Post
-        form method="POST" action="/posts/#{result['id']}/delete"
-            input type="submit" value="Delete Post"
-        hr 
-    form method="POST" action="/posts/#{result['id']}/save"
-        input type="submit" value="Save Post"
-    h3 Comment Section
-    form action="/posts/#{result['id']}/comments" method="post"
-        textarea name="content" placeholder="content of comment"
-        input type="hidden" name="username" value="#{my_username}"
-        input type="submit" value="Upload Comment"
-- else 
-    h3 Comment Section
-hr 
-- comments.each do |comment|
-    p #{comment['content']}
-    h5 This was commented by: 
-    a href="/user/#{comment['user_id']}/profile" #{comment['username']} 
-    hr
-
-
+doctype html
+html
+  head
+    meta charset="UTF-8"
+    meta name="viewport" content="width=device-width, initial-scale=1.0"
+    title Post Detail
+    link rel="stylesheet" href="/style.css"
+  
+  body
+    .container
+      .content-card
+        button.back-button(onclick="history.back()")
+          i.arrow-left
+          | Back
+        
+        .post-detail
+          - if user_id != post_user_id
+            .post-author
+              p.author-label Posted by:
+              a.author-link href="/user/#{post_user_id}/profile" #{username}
+          
+          .post-header
+            h1.post-title #{result['header']}
+          
+          .post-content
+            p #{result['content']}
+          
+          - if categories.length != 0 
+            .post-categories
+              h3.section-subtitle Categories:
+              .category-tags
+                - categories.each do |category| 
+                  a.category-tag href="/sort?categories%5B%5D=#{category['name']}" #{category['name']}
+          
+          - if saved_post_users.length != 0
+            .saved-by
+              h3.section-subtitle Saved by:
+              .saved-users
+                - saved_post_users.each do |user|
+                  a.user-link href="/user/#{user["user_id"]}/profile" #{user["username"]}
+        
+        - if logged_in
+          .post-actions
+            - if user_type == 0 || user_id == post_user_id
+              .admin-actions
+                a.edit-link href="/posts/#{result['id']}/edit" Edit Post
+                form.delete-form method="POST" action="/posts/#{result['id']}/delete"
+                  button.delete-btn type="submit" Delete Post
+            
+            form.save-form method="POST" action="/posts/#{result['id']}/save"
+              button.save-btn type="submit" Save Post
+        
+        .comments-section
+          h3.section-title Comment Section
+          
+          - if logged_in
+            form.comment-form action="/posts/#{result['id']}/comments" method="post"
+              .form-group
+                textarea.form-control name="content" placeholder="Write your comment here..."
+              input type="hidden" name="username" value="#{my_username}"
+              .form-actions
+                button.submit-btn type="submit" Post Comment
+        
+          .comments-list
+            - comments.each do |comment|
+              .comment-item
+                p.comment-content #{comment['content']}
+                .comment-meta
+                  span.comment-by Commented by:
+                  a.user-link href="/user/#{comment['user_id']}/profile" #{comment['username']}

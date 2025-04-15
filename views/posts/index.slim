@@ -1,28 +1,44 @@
-
-- if logged_in
-    a href="/user/#{user_id}/profile" My Profile
-    form method="POST" action="/logout"
-        input type="submit" value="logout"
-- else 
-    a href="/login" Login
-
-hr 
-
-h1 Public posts: 
-hr 
-h2 Sort by category 
-
-form action="/sort" method="GET"
-    - categories.each do |category|
-        - if chosen_categories != nil && chosen_categories.include?(category)
-            input id="input_#{category}" type="checkbox" name="categories[]" value="#{category}" checked="checked"
-        - else 
-            input id="input_#{category}" type="checkbox" name="categories[]" value="#{category}"
-        label for="input_#{category}" #{category.capitalize}
-
-    input type="submit" value="Sort"
-
-hr 
-- posts.each do |post|
-    li 
-        a href="/posts/#{post['id']}" #{post["header"]}
+doctype html
+html
+  head
+    meta charset="UTF-8"
+    meta name="viewport" content="width=device-width, initial-scale=1.0"
+    title Public Posts
+    link rel="stylesheet" href="/style.css"
+  
+  body
+    .container
+      .nav-card
+        .nav-section
+          - if logged_in
+            .nav-flex
+              a.profile-link href="/user/#{user_id}/profile" 
+                i.profile-icon
+                | My Profile
+              form.logout-form method="POST" action="/logout"
+                button.logout-btn type="submit" Logout
+          - else 
+            a.login-link href="/login" Login
+        
+        .content-section
+          h1.page-title Public posts
+          
+          .category-filter
+            h2.section-title Sort by category
+            form.filter-form action="/sort" method="GET"
+              .categories-container
+                - categories.each do |category|
+                  .category-checkbox
+                    - if chosen_categories != nil && chosen_categories.include?(category)
+                      input.custom-checkbox id="input_#{category}" type="checkbox" name="categories[]" value="#{category}" checked="checked"
+                    - else 
+                      input.custom-checkbox id="input_#{category}" type="checkbox" name="categories[]" value="#{category}"
+                    label.checkbox-label for="input_#{category}" #{category.capitalize}
+              .form-actions
+                button.submit-btn type="submit" Sort
+          
+          .posts-list
+            ul
+              - posts.each do |post|
+                li.post-item
+                  a.post-link href="/posts/#{post['id']}" #{post["header"]}

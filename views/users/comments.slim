@@ -1,10 +1,26 @@
-form 
-    input type="button" value="Back" onclick="history.back()"
-hr 
-- comments.each do |comment|
-    li 
-        a href="/posts/#{comment['post_id']}" #{comment["content"]}
-        - if id == user_id || user_type == 0
-            form method="POST" action="/posts/#{comment['post_id']}/comment/#{comment['id']}/delete"
-                input type="submit" value="Delete Comment"
-    hr 
+doctype html
+html
+  head
+    meta charset="UTF-8"
+    meta name="viewport" content="width=device-width, initial-scale=1.0"
+    title Comments
+    link rel="stylesheet" href="/style.css"
+  
+  body
+    .container
+      .content-card
+        button.back-button(onclick="history.back()")
+          i.arrow-left
+          | Back
+        
+        .content-section
+          h2.section-title Comments
+          
+          .comments-list
+            ul
+              - comments.each do |comment|
+                li.comment-item
+                  a.comment-link href="/posts/#{comment['post_id']}" #{comment["content"]}
+                  - if id == user_id || user_type == 0
+                    form.delete-comment-form method="POST" action="/posts/#{comment['post_id']}/comment/#{comment['id']}/delete"
+                      button.delete-comment-btn type="submit" Delete

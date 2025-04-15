@@ -1,19 +1,46 @@
-form 
-    input type="button" value="Back" onclick="history.back()"
-
-hr 
-- if id == user_id
-    h2 Welcome back to your profile, #{username}
-    a href="/users/#{id}/posts" My Posts 
-    br 
-    a href="/users/#{id}/comments" My Comments
-    br 
-    a href="/users/#{id}/saved_posts" My Saved Posts
-- else 
-    h2 This is  #{username}'s Profile
-    a href="/users/#{id}/posts" Posts
-    br  
-    a href="/users/#{id}/comments" Comments
-    br 
-    a href="/users/#{id}/saved_posts" Saved Posts
-
+doctype html
+html
+  head
+    meta charset="UTF-8"
+    meta name="viewport" content="width=device-width, initial-scale=1.0"
+    title User Profile
+    link rel="stylesheet" href="/style.css"
+  
+  body
+    .container
+      .profile-card
+        button.back-button(onclick="history.back()")
+          i.arrow-left
+          | Back
+        
+        .profile-content
+          - if id == user_id
+            h2.profile-title Welcome back to your profile, #{username}
+          - else 
+            h2.profile-title This is #{username}'s Profile
+          
+          .profile-nav
+            - if id == user_id
+              a.profile-nav-item href="/users/#{id}/posts"
+                i.posts-icon
+                span My Posts
+              
+              a.profile-nav-item href="/users/#{id}/comments"
+                i.comments-icon
+                span My Comments
+              
+              a.profile-nav-item href="/users/#{id}/saved_posts"
+                i.saved-icon
+                span My Saved Posts
+            - else
+              a.profile-nav-item href="/users/#{id}/posts"
+                i.posts-icon
+                span Posts
+              
+              a.profile-nav-item href="/users/#{id}/comments"
+                i.comments-icon
+                span Comments
+              
+              a.profile-nav-item href="/users/#{id}/saved_posts"
+                i.saved-icon
+                span Saved Posts

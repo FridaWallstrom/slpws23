@@ -1,17 +1,29 @@
-form 
-    input type="button" value="Back" onclick="history.back()"
-
-hr 
-
-- if id == user_id
-    h2 These are your saved posts: 
-- else 
-    h2 These are #{username}'s saved posts: 
-    hr 
-
-- posts.each do |post|
-    li 
-        a href="/posts/#{post['id']}" #{post["header"]}
-        - if user_id == id 
-            form method="POST" action="/users/#{id}/saved_posts/#{post['id']}/delete" 
-                input type="submit" value="Delete Saved Post"
+doctype html
+html
+  head
+    meta charset="UTF-8"
+    meta name="viewport" content="width=device-width, initial-scale=1.0"
+    title Saved Posts
+    link rel="stylesheet" href="/style.css"
+  
+  body
+    .container
+      .content-card
+        button.back-button(onclick="history.back()")
+          i.arrow-left
+          | Back
+        
+        .content-section
+          - if id == user_id
+            h2.section-title These are your saved posts:
+          - else 
+            h2.section-title These are #{username}'s saved posts:
+          
+          .saved-posts-list
+            ul
+              - posts.each do |post|
+                li.saved-post-item
+                  a.post-link href="/posts/#{post['id']}" #{post["header"]}
+                  - if user_id == id 
+                    form.delete-saved-form method="POST" action="/users/#{id}/saved_posts/#{post['id']}/delete" 
+                      button.delete-saved-btn type="submit" Remove
